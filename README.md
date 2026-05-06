@@ -13,3 +13,6 @@ TinyMeter is designed to be efficient and most importantly quick to use.
 
 ## Future features
 * At least a persistent widget that can be activated so that the user does not need to unlock the phone (say, in cold winter weather) to see an average metering of the scene.
+
+## Screenshots
+![Main screen](screenshots/TinyMeter1.jpg)
