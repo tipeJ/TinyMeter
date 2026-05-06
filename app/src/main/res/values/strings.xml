@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Light Meter</string>
+    <string name="metering_average">Average</string>
+    <string name="metering_spot">Spot</string>
+    <string name="mode_ap">Av</string>
+    <string name="mode_sp">Tv</string>
+    <string name="mode_manual">M</string>
+    <string name="permission_rationale">Camera permission is needed to measure light</string>
+</resources>

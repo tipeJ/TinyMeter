@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background">#0A0A0A</color>
+    <color name="surface">#141414</color>
+    <color name="surface_elevated">#1E1E1E</color>
+
+    <color name="text_primary">#F5F5F5</color>
+    <color name="text_secondary">#888888</color>
+    <color name="text_disabled">#444444</color>
+
+    <color name="accent_amber">#FFCA28</color>
+    <color name="accent_amber_dim">#7A6010</color>
+    <color name="accent_green">#69F0AE</color>
+
+    <color name="warning_red">#FF5252</color>
+    <color name="warning_blue">#448AFF</color>
+
+    <color name="divider">#222222</color>
+
+    <color name="toggle_selected_bg">#FFCA28</color>
+    <color name="toggle_selected_text">#0A0A0A</color>
+    <color name="toggle_unselected_bg">#1E1E1E</color>
+    <color name="toggle_unselected_text">#888888</color>
+
+    <color name="step_button_bg">#242424</color>
+    <color name="preset_button_bg">#1A1A1A</color>
+    <color name="preset_button_text">#AAAAAA</color>
+</resources>

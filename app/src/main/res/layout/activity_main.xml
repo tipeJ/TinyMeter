@@ -1,0 +1,537 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background">
+
+    <!-- Camera Preview (full screen) -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/cameraPreview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:scaleType="fillCenter" />
+
+    <!-- Spot metering overlay-->
+    <com.tipej.tinymeter.ui.SpotMeteringOverlay
+        android:id="@+id/spotOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Top bar: metering mode + priority mode -->
+    <LinearLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/gradient_top"
+        android:orientation="vertical"
+        android:padding="12dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- Metering mode row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.12"
+                android:text="METERING"
+                android:textColor="@color/text_secondary"
+                android:textSize="10sp" />
+
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/meteringToggleGroup"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                app:selectionRequired="true"
+                app:singleSelection="true">
+
+                <Button
+                    android:id="@+id/btnMeteringAverage"
+                    style="@style/Widget.TinyMeter.ToggleButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="AVERAGE" />
+
+                <Button
+                    android:id="@+id/btnMeteringSpot"
+                    style="@style/Widget.TinyMeter.ToggleButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="SPOT" />
+
+            </com.google.android.material.button.MaterialButtonToggleGroup>
+        </LinearLayout>
+
+        <!-- Priority mode row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.12"
+                android:text="MODE"
+                android:textColor="@color/text_secondary"
+                android:textSize="10sp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:background="@drawable/bg_toggle_group"
+                android:clipToPadding="true"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnModeAp"
+                    style="@style/Widget.TinyMeter.ModeButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="Av" />
+
+                <Button
+                    android:id="@+id/btnModeSp"
+                    style="@style/Widget.TinyMeter.ModeButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="Tv" />
+
+                <Button
+                    android:id="@+id/btnModeManual"
+                    style="@style/Widget.TinyMeter.ModeButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="M" />
+
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- EV + Lux centre display -->
+    <LinearLayout
+        android:id="@+id/evDisplay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@id/bottomPanel"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tvEv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-light"
+            android:letterSpacing="-0.02"
+            android:text="EV 0.0"
+            android:textColor="@color/text_primary"
+            android:textSize="56sp" />
+
+        <TextView
+            android:id="@+id/tvLux"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:fontFamily="sans-serif-medium"
+            android:text="— lx"
+            android:textColor="@color/accent_amber"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/tvLightDescription"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="Waiting for reading…"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp" />
+
+        <!-- Over/Under exposure warnings -->
+        <TextView
+            android:id="@+id/tvUnderExposed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.08"
+            android:text="▼ UNDEREXPOSED"
+            android:textColor="@color/warning_blue"
+            android:textSize="11sp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvOverExposed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.08"
+            android:text="▲ OVEREXPOSED"
+            android:textColor="@color/warning_red"
+            android:textSize="11sp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+    <!-- Bottom panel -->
+    <LinearLayout
+        android:id="@+id/bottomPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_bottom_panel"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <!-- Mode label row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvModeLabel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.05"
+                android:text="Aperture Priority (Av)"
+                android:textColor="@color/accent_amber"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <!-- Exposure scale -->
+        <com.tipej.tinymeter.ui.ExposureScaleView
+            android:id="@+id/exposureScale"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginBottom="12dp"
+            android:background="@color/divider" />
+
+        <!-- ISO Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="48dp"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.1"
+                android:text="ISO"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp" />
+
+            <!-- Stepper -->
+            <Button
+                android:id="@+id/btnIsoDown"
+                style="@style/Widget.TinyMeter.StepButton"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:text="−" />
+
+            <TextView
+                android:id="@+id/tvIsoValue"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="sans-serif-light"
+                android:gravity="center"
+                android:text="ISO 400"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp" />
+
+            <Button
+                android:id="@+id/btnIsoUp"
+                style="@style/Widget.TinyMeter.StepButton"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:text="+" />
+
+            <!-- ISO quick presets -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnIso100"
+                    style="@style/Widget.TinyMeter.PresetButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="100" />
+
+                <Button
+                    android:id="@+id/btnIso400"
+                    style="@style/Widget.TinyMeter.PresetButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="400" />
+
+                <Button
+                    android:id="@+id/btnIso800"
+                    style="@style/Widget.TinyMeter.PresetButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="800" />
+
+                <Button
+                    android:id="@+id/btnIso1600"
+                    style="@style/Widget.TinyMeter.PresetButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1600" />
+
+                <Button
+                    android:id="@+id/btnIso3200"
+                    style="@style/Widget.TinyMeter.PresetButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="3200" />
+
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Aperture Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="48dp"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.1"
+                android:text="APERTURE"
+                android:textColor="@color/text_secondary"
+                android:textSize="9sp" />
+
+            <Button
+                android:id="@+id/btnApertureDown"
+                style="@style/Widget.TinyMeter.StepButton"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:text="−" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvApertureValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-light"
+                    android:text="f/2.8"
+                    android:textColor="@color/text_primary"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/tvCalculatedAperture"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="calculated"
+                    android:textColor="@color/accent_amber"
+                    android:textSize="9sp"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btnApertureUp"
+                style="@style/Widget.TinyMeter.StepButton"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:text="+" />
+
+            <!-- Aperture quick presets -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnAp14"
+                    style="@style/Widget.TinyMeter.PresetButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1.4" />
+
+                <Button
+                    android:id="@+id/btnAp28"
+                    style="@style/Widget.TinyMeter.PresetButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="2.8" />
+
+                <Button
+                    android:id="@+id/btnAp56"
+                    style="@style/Widget.TinyMeter.PresetButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="5.6" />
+
+                <Button
+                    android:id="@+id/btnAp8"
+                    style="@style/Widget.TinyMeter.PresetButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="8" />
+
+                <Button
+                    android:id="@+id/btnAp16"
+                    style="@style/Widget.TinyMeter.PresetButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="16" />
+
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Shutter Speed Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="48dp"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.1"
+                android:text="SHUTTER"
+                android:textColor="@color/text_secondary"
+                android:textSize="9sp" />
+
+            <Button
+                android:id="@+id/btnShutterDown"
+                style="@style/Widget.TinyMeter.StepButton"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:text="−" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvShutterValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-light"
+                    android:text="1/60"
+                    android:textColor="@color/text_primary"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/tvCalculatedShutter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="calculated"
+                    android:textColor="@color/accent_amber"
+                    android:textSize="9sp"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btnShutterUp"
+                style="@style/Widget.TinyMeter.StepButton"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:text="+" />
+
+            <!-- Shutter quick presets -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnSh30"
+                    style="@style/Widget.TinyMeter.PresetButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="30s" />
+
+                <Button
+                    android:id="@+id/btnSh125"
+                    style="@style/Widget.TinyMeter.PresetButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="125" />
+
+                <Button
+                    android:id="@+id/btnSh250"
+                    style="@style/Widget.TinyMeter.PresetButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="250" />
+
+                <Button
+                    android:id="@+id/btnSh500"
+                    style="@style/Widget.TinyMeter.PresetButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="500" />
+
+                <Button
+                    android:id="@+id/btnSh1000"
+                    style="@style/Widget.TinyMeter.PresetButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1000" />
+
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
