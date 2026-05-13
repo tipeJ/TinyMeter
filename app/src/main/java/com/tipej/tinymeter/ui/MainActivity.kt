@@ -147,8 +147,8 @@ class MainActivity : AppCompatActivity() {
         binding.btnIsoDown.setOnClickListener { viewModel.stepIso(false) }
         binding.btnIsoUp.setOnClickListener   { viewModel.stepIso(true) }
 
-        binding.btnApertureDown.setOnClickListener { viewModel.stepAperture(false) }
-        binding.btnApertureUp.setOnClickListener   { viewModel.stepAperture(true) }
+        binding.btnApertureDown.setOnClickListener { viewModel.stepAperture(true) }
+        binding.btnApertureUp.setOnClickListener   { viewModel.stepAperture(false) }
 
         binding.btnShutterDown.setOnClickListener { viewModel.stepShutter(false) }
         binding.btnShutterUp.setOnClickListener   { viewModel.stepShutter(true) }
@@ -199,7 +199,7 @@ class MainActivity : AppCompatActivity() {
             else 0.0
 
             binding.exposureScale.evDeviation = when (priority) {
-                PriorityMode.MANUAL -> (settingsEv - ev100).toFloat().coerceIn(-3f, 3f)
+                PriorityMode.MANUAL -> (ev100 - settingsEv).toFloat().coerceIn(-3f, 3f)
                 else -> 0f
             }
 

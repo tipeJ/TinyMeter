@@ -105,8 +105,8 @@ object ExposureCalculator {
             shutterSpeed = shutterSpeed,
             ev = ev100,
             lux = lux,
-            isUnderExposed = settingsEv < ev100 - 1.0,
-            isOverExposed  = settingsEv > ev100 + 1.0
+            isOverExposed = settingsEv < ev100 - 1.0,
+            isUnderExposed  = settingsEv > ev100 + 1.0
         )
     }
 

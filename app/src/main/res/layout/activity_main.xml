@@ -229,7 +229,7 @@
         <com.tipej.tinymeter.ui.ExposureScaleView
             android:id="@+id/exposureScale"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="52dp"
             android:layout_marginBottom="12dp" />
 
         <!-- Divider -->
