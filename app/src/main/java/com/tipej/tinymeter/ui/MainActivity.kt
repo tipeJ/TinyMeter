@@ -165,6 +165,7 @@ class MainActivity : AppCompatActivity() {
         binding.btnAp28.setOnClickListener { viewModel.setAperture(2.8) }
         binding.btnAp56.setOnClickListener { viewModel.setAperture(5.6) }
         binding.btnAp8.setOnClickListener  { viewModel.setAperture(8.0) }
+        binding.btnAp11.setOnClickListener  { viewModel.setAperture(11.0) }
         binding.btnAp16.setOnClickListener { viewModel.setAperture(16.0) }
 
         binding.btnSh30.setOnClickListener   { viewModel.setShutter(30.0) }
