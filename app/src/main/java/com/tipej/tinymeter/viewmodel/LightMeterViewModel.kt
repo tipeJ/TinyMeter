@@ -126,10 +126,10 @@ class LightMeterViewModel : ViewModel() {
         val shutter  = _selectedShutter.value  ?: (1.0 / 60)
         val ec       = _evCompensation.value   ?: 0f
 
-        // EC shifts the effective lux by 2^ec stops (positive EC = brighter target = more light needed)
-        // We adjust the metered lux so the calculator sees a "brighter" or "darker" scene,
-        // which causes it to recommend a correspondingly faster/slower shutter or wider/narrower aperture.
-        val compensatedLux = lux * Math.pow(2.0, ec.toDouble())
+        // EC: positive EC = more light = longer shutter or wider aperture.
+        // The priority calculators produce MORE exposure when lux is LOWER
+        // (darker scene → open up). So +1 EC divides lux by 2, giving 1 stop more exposure.
+        val compensatedLux = lux / Math.pow(2.0, ec.toDouble())
 
         val reading = when (_priorityMode.value ?: PriorityMode.APERTURE_PRIORITY) {
             PriorityMode.APERTURE_PRIORITY ->
