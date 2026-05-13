@@ -3,6 +3,7 @@ package com.tipej.tinymeter.ui
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.view.MotionEvent
 import android.view.View
 
 /**
@@ -18,6 +19,24 @@ class ExposureScaleView @JvmOverloads constructor(
     //Deviation from correct EV: negative = under, positive = over
     var evDeviation: Float = 0f
         set(value) { field = value.coerceIn(-3f, 3f); invalidate() }
+
+    /**
+     * Current exposure compensation in EV stops. Only shown and interactive
+     * when [ecEnabled] is true (i.e. Aperture or Shutter priority mode).
+     * Range: -3 to +3 EV in 1/3-stop increments.
+     */
+    var evCompensation: Float = 0f
+        set(value) { field = value.coerceIn(-3f, 3f); invalidate() }
+
+    /**
+     * When true the scale accepts touch input to set [evCompensation] and
+     * draws the EC marker. Set to true in Av/Tv modes, false in Manual.
+     */
+    var ecEnabled: Boolean = false
+        set(value) { field = value; isClickable = value; isFocusable = value; invalidate() }
+
+    /** Called when the user taps/drags to set a new compensation value. */
+    var onCompensationChanged: ((Float) -> Unit)? = null
 
     private val dp = resources.displayMetrics.density
 
@@ -48,6 +67,27 @@ class ExposureScaleView @JvmOverloads constructor(
         strokeWidth = 2f * dp
     }
 
+    // Paint for the EC diamond marker
+    private val ecMarkerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#40C4FF")
+        style = Paint.Style.FILL
+    }
+    private val ecMarkerStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE
+        style = Paint.Style.STROKE
+        strokeWidth = 1.5f * dp
+    }
+    private val ecTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#40C4FF")
+        textSize = 9f * dp
+        textAlign = Paint.Align.CENTER
+        typeface = Typeface.MONOSPACE
+    }
+
+    // Cached scale geometry so onTouchEvent can map touch X → EV without re-computing
+    private var cachedCx: Float = 0f
+    private var cachedScaleHalfW: Float = 0f
+
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         val w = width.toFloat()
@@ -57,6 +97,9 @@ class ExposureScaleView @JvmOverloads constructor(
         val scaleLeft = (w - scaleW) / 2f
         val scaleRight = scaleLeft + scaleW
         val midY = h * 0.45f
+
+        cachedCx = cx
+        cachedScaleHalfW = scaleW / 2f
 
         // Baseline
         canvas.drawLine(scaleLeft, midY, scaleRight, midY, scalePaint)
@@ -102,5 +145,81 @@ class ExposureScaleView @JvmOverloads constructor(
         textPaint.color = needlePaint.color
         textPaint.textSize = 10f * dp
         canvas.drawText(devText, cx, h * 0.15f, textPaint)
+
+        // EC marker — only drawn in Av/Tv mode
+        if (ecEnabled) {
+            drawEcMarker(canvas, cx, scaleW, midY, h)
+        }
+    }
+
+    /**
+     * Draws a small diamond above the scale baseline at the EC position,
+     * plus a "±X.X" label above the deviation label.
+     */
+    private fun drawEcMarker(canvas: Canvas, cx: Float, scaleW: Float, midY: Float, h: Float) {
+        val ecX = cx + (evCompensation / 3f) * (scaleW / 2f)
+        val ds = 5f * dp   // diamond half-size
+
+        // Draw above the baseline
+        val diamondTop = midY - h * 0.40f - ds * 0.5f
+        val diamondPath = Path().apply {
+            moveTo(ecX, diamondTop - ds)        // top
+            lineTo(ecX + ds, diamondTop)         // right
+            lineTo(ecX, diamondTop + ds)         // bottom
+            lineTo(ecX - ds, diamondTop)         // left
+            close()
+        }
+        canvas.drawPath(diamondPath, ecMarkerPaint)
+        canvas.drawPath(diamondPath, ecMarkerStrokePaint)
+
+        // EC value label — above the EV deviation label
+        val ecText = when {
+            Math.abs(evCompensation) < 0.05f -> "EC ±0"
+            evCompensation > 0 -> String.format("EC +%.1f", evCompensation)
+            else -> String.format("EC %.1f", evCompensation)
+        }
+        ecTextPaint.textSize = 9f * dp
+        canvas.drawText(ecText, cx, h * 0.05f, ecTextPaint)
+
+        // Hint text so the user knows the scale is interactive
+        if (Math.abs(evCompensation) < 0.05f) {
+            val hintPaint = Paint(ecTextPaint).apply {
+                color = Color.argb(100, 64, 196, 255)
+                textSize = 8f * dp
+            }
+            canvas.drawText("tap to set EC", cx, h * 0.98f, hintPaint)
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Touch handling
+    // -------------------------------------------------------------------------
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (!ecEnabled) return false
+
+        when (event.action) {
+            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
+                val raw = (event.x - cachedCx) / cachedScaleHalfW * 3f
+                // Snap to nearest 1/3-stop increment
+                val snapped = (Math.round(raw * 3f) / 3f).toFloat().coerceIn(-3f, 3f)
+                if (snapped != evCompensation) {
+                    evCompensation = snapped
+                    onCompensationChanged?.invoke(snapped)
+                }
+                return true
+            }
+            MotionEvent.ACTION_UP -> {
+                performClick()
+                return true
+            }
+        }
+        return super.onTouchEvent(event)
+    }
+
+    // Required for accessibility when overriding onTouchEvent
+    override fun performClick(): Boolean {
+        super.performClick()
+        return true
     }
 }

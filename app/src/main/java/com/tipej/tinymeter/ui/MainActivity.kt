@@ -172,6 +172,11 @@ class MainActivity : AppCompatActivity() {
         binding.btnSh250.setOnClickListener  { viewModel.setShutter(1.0 / 250) }
         binding.btnSh500.setOnClickListener  { viewModel.setShutter(1.0 / 500) }
         binding.btnSh1000.setOnClickListener { viewModel.setShutter(1.0 / 1000) }
+
+        // Wire EC touch callback — view calls this whenever the user drags the scale
+        binding.exposureScale.onCompensationChanged = { ev ->
+            viewModel.setEvCompensation(ev)
+        }
     }
 
     // Observers
@@ -233,11 +238,19 @@ class MainActivity : AppCompatActivity() {
 
             binding.tvCalculatedShutter.visibility  = if (apMode) View.VISIBLE else View.GONE
             binding.tvCalculatedAperture.visibility = if (spMode) View.VISIBLE else View.GONE
+
+            // Enable EC interaction only in priority modes
+            binding.exposureScale.ecEnabled = apMode || spMode
         }
 
         viewModel.spotRegion.observe(this) { region ->
             binding.spotOverlay.spotX = region.x
             binding.spotOverlay.spotY = region.y
+        }
+
+        // Keep the scale's EC marker in sync with the ViewModel (e.g. when mode resets it to 0)
+        viewModel.evCompensation.observe(this) { ec ->
+            binding.exposureScale.evCompensation = ec
         }
     }
 }

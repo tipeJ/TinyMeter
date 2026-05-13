@@ -36,6 +36,14 @@ class LightMeterViewModel : ViewModel() {
     private val _spotRegion = MutableLiveData(SpotRegion(0.5f, 0.5f))
     val spotRegion: LiveData<SpotRegion> = _spotRegion
 
+    /**
+     * Exposure compensation in EV stops, applied on top of the metered value
+     * in Aperture Priority and Shutter Priority modes. Range: -3 to +3.
+     * Has no effect in Manual mode (the user controls all three values directly).
+     */
+    private val _evCompensation = MutableLiveData(0f)
+    val evCompensation: LiveData<Float> = _evCompensation
+
     // Smoothing buffer
     private val luxBuffer = ArrayDeque<Double>()
     private val BUFFER_SIZE = 8
@@ -45,8 +53,8 @@ class LightMeterViewModel : ViewModel() {
     // -------------------------------------------------------------------------
 
     /**
-     Called when real Camera2 sensor metadata is available.
-     This is the primary metering method
+    Called when real Camera2 sensor metadata is available.
+    This is the primary metering method
      */
     fun onSensorData(
         brightness: Double,
@@ -78,6 +86,8 @@ class LightMeterViewModel : ViewModel() {
 
     fun setPriorityMode(mode: PriorityMode) {
         _priorityMode.value = mode
+        // Reset EC when switching to Manual — it has no meaning there
+        if (mode == PriorityMode.MANUAL) _evCompensation.value = 0f
         recompute(_currentLux.value ?: 0.0)
     }
 
@@ -99,19 +109,35 @@ class LightMeterViewModel : ViewModel() {
     fun setSpotRegion(x: Float, y: Float) { _spotRegion.value = SpotRegion(x, y) }
     fun setCameraActive(active: Boolean)  { _cameraActive.value = active }
 
+    /**
+     * Sets exposure compensation (EV). Only meaningful in Av and Tv modes.
+     * Positive values brighten the calculated exposure; negative values darken it.
+     */
+    fun setEvCompensation(ev: Float) {
+        _evCompensation.value = ev.coerceIn(-3f, 3f)
+        recompute(_currentLux.value ?: 0.0)
+    }
+
     // Computation
     private fun recompute(lux: Double) {
         if (lux <= 0.0) return
         val iso      = _selectedIso.value      ?: 400
         val aperture = _selectedAperture.value ?: 2.8
         val shutter  = _selectedShutter.value  ?: (1.0 / 60)
+        val ec       = _evCompensation.value   ?: 0f
+
+        // EC shifts the effective lux by 2^ec stops (positive EC = brighter target = more light needed)
+        // We adjust the metered lux so the calculator sees a "brighter" or "darker" scene,
+        // which causes it to recommend a correspondingly faster/slower shutter or wider/narrower aperture.
+        val compensatedLux = lux * Math.pow(2.0, ec.toDouble())
 
         val reading = when (_priorityMode.value ?: PriorityMode.APERTURE_PRIORITY) {
             PriorityMode.APERTURE_PRIORITY ->
-                ExposureCalculator.buildAperturePriorityReading(lux, iso, aperture)
+                ExposureCalculator.buildAperturePriorityReading(compensatedLux, iso, aperture)
             PriorityMode.SHUTTER_PRIORITY ->
-                ExposureCalculator.buildShutterPriorityReading(lux, iso, shutter)
+                ExposureCalculator.buildShutterPriorityReading(compensatedLux, iso, shutter)
             PriorityMode.MANUAL ->
+                // Manual ignores EC — lux is used as-is for the deviation display
                 ExposureCalculator.buildManualReading(lux, iso, aperture, shutter)
         }
 
@@ -130,7 +156,7 @@ class LightMeterViewModel : ViewModel() {
         val current = _selectedIso.value ?: 400
         val idx = IsoValues.values.indexOf(current).coerceAtLeast(0)
         val newIdx = if (up) (idx + 1).coerceAtMost(IsoValues.values.lastIndex)
-                     else    (idx - 1).coerceAtLeast(0)
+        else    (idx - 1).coerceAtLeast(0)
         setIso(IsoValues.values[newIdx])
     }
 
@@ -138,7 +164,7 @@ class LightMeterViewModel : ViewModel() {
         val current = _selectedAperture.value ?: 2.8
         val idx = ApertureValues.values.indexOfFirst { it >= current - 0.01 }.coerceAtLeast(0)
         val newIdx = if (up) (idx + 1).coerceAtMost(ApertureValues.values.lastIndex)
-                     else    (idx - 1).coerceAtLeast(0)
+        else    (idx - 1).coerceAtLeast(0)
         setAperture(ApertureValues.values[newIdx])
     }
 
@@ -148,7 +174,7 @@ class LightMeterViewModel : ViewModel() {
         // Why 1/4000 as the limit you may ask? Because that's the highest film camera shutter speed ever (Nikon F3A)
         val idx = ShutterSpeedValues.values.indexOfFirst { it <= current + 1e-9 }.coerceAtLeast(0)
         val newIdx = if (up) (idx - 1).coerceAtLeast(0)
-                     else    (idx + 1).coerceAtMost(ShutterSpeedValues.values.lastIndex)
+        else    (idx + 1).coerceAtMost(ShutterSpeedValues.values.lastIndex)
         setShutter(ShutterSpeedValues.values[newIdx])
     }
 }
