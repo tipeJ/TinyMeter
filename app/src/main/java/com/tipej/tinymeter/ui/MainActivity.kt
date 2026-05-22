@@ -18,6 +18,7 @@ import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
+import androidx.camera.core.FocusMeteringAction
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import com.tipej.tinymeter.databinding.ActivityMainBinding
@@ -213,6 +214,20 @@ class MainActivity : AppCompatActivity() {
             binding.btnMeteringAverage.isSelected = !isSpot
             binding.btnMeteringSpot.isSelected    = isSpot
             binding.spotOverlay.isClickable       = isSpot
+            if (isSpot) {
+                val region = viewModel.spotRegion.value ?: return@observe
+                updateMeteringPoint(region.x, region.y)
+            } else {
+                resetToAverageMetering()
+            }
+        }
+        // Wait for selected spot to change and then update the metering point
+        viewModel.spotRegion.observe(this) { region ->
+            binding.spotOverlay.spotX = region.x
+            binding.spotOverlay.spotY = region.y
+            if (viewModel.meteringMode.value == MeteringMode.SPOT) {
+                updateMeteringPoint(region.x, region.y)
+            }
         }
 
         viewModel.priorityMode.observe(this) { mode ->
@@ -253,5 +268,21 @@ class MainActivity : AppCompatActivity() {
         viewModel.evCompensation.observe(this) { ec ->
             binding.exposureScale.evCompensation = ec
         }
+    }
+    private fun resetToAverageMetering() {
+        camera?.cameraControl?.cancelFocusAndMetering()
+    }
+    private fun updateMeteringPoint(x: Float, y: Float) {
+        val camera = camera ?: return
+        val factory = binding.cameraPreview.meteringPointFactory
+        val point = factory.createPoint(
+            x * binding.cameraPreview.width,
+            y * binding.cameraPreview.height,
+            0.1f
+        )
+        val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AE)
+            .disableAutoCancel()
+            .build()
+        camera.cameraControl.startFocusAndMetering(action)
     }
 }
